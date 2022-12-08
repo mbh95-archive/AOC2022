@@ -92,7 +92,6 @@ def solution():
     print(min(size for (dir, size) in sizes.items() if free_space + size >= 30000000))
 
 
-
 def main():
     solution()
 
