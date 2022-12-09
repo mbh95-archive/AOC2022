@@ -9,38 +9,32 @@ def part1():
     num_rows = len(map)
     num_cols = len(map[0])
 
+    def out_of_bounds(r, c):
+        nonlocal num_rows, num_cols
+        return r < 0 or r >= num_rows or c < 0 or c >= num_cols
+
+    def cast_ray(path):
+        nonlocal map, visible, num_rows, num_cols
+        max_height = -1
+        for r, c in path:
+            if out_of_bounds(r, c):
+                return
+            cur_height = map[r][c]
+            if cur_height > max_height:
+                max_height = cur_height
+                visible[r][c] = True
+
+    # For each row, cast a ray from left and right
     for r in range(num_rows):
-        max_height = map[r][0]
-        visible[r][0] = True
-        for c in range(0, num_cols, 1):
-            cur_height = map[r][c]
-            if cur_height > max_height:
-                max_height = cur_height
-                visible[r][c] = True
+        cast_ray((r, c) for c in range(num_cols))
+        cast_ray((r, c) for c in range(num_cols - 1, 0, -1))
 
-        max_height = map[r][num_cols - 1]
-        visible[r][num_cols - 1] = True
-        for c in range(num_cols - 1, 0, -1):
-            cur_height = map[r][c]
-            if cur_height > max_height:
-                max_height = cur_height
-                visible[r][c] = True
+    # For each col, cast a ray from top and bottom
     for c in range(num_cols):
-        max_height = map[0][c]
-        visible[0][c] = True
-        for r in range(0, num_rows, 1):
-            cur_height = map[r][c]
-            if cur_height > max_height:
-                max_height = cur_height
-                visible[r][c] = True
+        cast_ray((r, c) for r in range(num_rows))
+        cast_ray((r, c) for r in range(num_rows - 1, 0, -1))
 
-        max_height = map[num_rows - 1][c]
-        visible[num_rows - 1][c] = True
-        for r in range(num_rows - 1, 0, -1):
-            cur_height = map[r][c]
-            if cur_height > max_height:
-                max_height = cur_height
-                visible[r][c] = True
+    # Count the visible trees
 
     print(sum(sum(v for v in r) for r in visible))
 
@@ -50,40 +44,25 @@ def part2():
     num_rows = len(map)
     num_cols = len(map[0])
 
+    def count_visible_trees(path, starting_height):
+        nonlocal map
+        num_visible = 0
+        for r, c in path:
+            num_visible += 1
+            if map[r][c] >= starting_height:
+                break
+        return num_visible
+
     def scenic_score(r0, c0):
         nonlocal map, num_rows, num_cols
         my_height = map[r0][c0]
-        view_s = 0
-        for r in range(r0 + 1, num_rows):
-            view_s += 1
-            if map[r][c0] >= my_height:
-                break
-        if view_s == 0:
-            return 0
-        view_n = 0
-        for r in range(r0 - 1, -1, -1):
-            view_n += 1
-            if map[r][c0] >= my_height:
-                break
-        if view_n == 0:
-            return 0
-        view_e = 0
-        for c in range(c0 + 1, num_cols):
-            view_e += 1
-            if map[r0][c] >= my_height:
-                break
-        if view_e == 0:
-            return 0
-        view_w = 0
-        for c in range(c0 - 1, -1, -1):
-            view_w += 1
-            if map[r0][c] >= my_height:
-                break
-        if view_w == 0:
-            return 0
-        return view_s * view_n * view_e * view_w
+        return count_visible_trees(((r, c0) for r in range(r0 + 1, num_rows)), my_height) \
+            * count_visible_trees(((r, c0) for r in range(r0 - 1, -1, -1)), my_height) \
+            * count_visible_trees(((r0, c) for c in range(c0 + 1, num_cols)), my_height) \
+            * count_visible_trees(((r0, c) for c in range(c0 - 1, -1, -1)), my_height)
 
-    print(max(max(scenic_score(r, c) for c in range(num_cols)) for r in range(num_rows)))
+    all_trees = ((r, c) for c in range(num_cols) for r in range(num_rows))
+    print(max(scenic_score(r, c) for (r, c) in all_trees))
 
 
 def main():
